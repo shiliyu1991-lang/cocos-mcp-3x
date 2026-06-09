@@ -174,7 +174,8 @@ module.exports = Editor.Panel.define({
             if (s.pythonExists === false && s.serverDir) {
                 rows.push('fix: open a terminal in the dir above, then run\n' +
                     '  python -m venv .venv\n' +
-                    '  .venv\\Scripts\\python -m pip install -e .');
+                    '  .venv\\Scripts\\python -m pip install -e .\n' +
+                    '  (slow/timeout? add  -i https://pypi.tuna.tsinghua.edu.cn/simple )');
             }
             this.$.sinfo.innerHTML = rows.join('\n');
         },

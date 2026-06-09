@@ -40,7 +40,10 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -e .
 ```
 
-> 面板在检测不到 `python.exe` 时，会在提示行直接给出上面这条命令。
+> **国内网络**：直连 pypi.org 装依赖经常超时，请加镜像：
+> `.venv\Scripts\python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple`
+
+> 面板在检测不到 `python.exe` 时，会在提示行直接给出上面这条命令（venv 那条，镜像需自行追加）。
 
 ## 在面板里使用
 

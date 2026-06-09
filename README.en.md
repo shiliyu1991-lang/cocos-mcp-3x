@@ -65,6 +65,12 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -e .
 ```
 
+> **Behind a slow/blocked PyPI** (e.g. in mainland China), the install often times out. Add a mirror:
+>
+> ```bat
+> .venv\Scripts\python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
+> ```
+
 > `.venv` is **not distributed with the repo** (its `pyvenv.cfg` hardcodes the local Python path and
 > it is large). Recreate it locally with the step above — the panel also surfaces this exact command
 > when it can't find `python.exe`.
@@ -100,6 +106,17 @@ Environment variables (precedence: CLI args > env vars > defaults):
 | `COCOS_MCP_BRIDGE_PATH` | `/cocosmcp` |
 | `COCOS_MCP_REQUEST_TIMEOUT` | `30` (seconds) |
 | `COCOS_MCP_CONNECT_TIMEOUT` | `5` (seconds) |
+
+## Troubleshooting
+
+| Symptom | Cause / fix |
+| --- | --- |
+| Panel shows **python: NOT FOUND** | `server\.venv` isn't created yet. Run the "first run" venv steps above; the panel re-checks every 1.5s. |
+| `pip install` keeps **timing out** | PyPI unreachable. Add a mirror, e.g. `-i https://pypi.tuna.tsinghua.edu.cn/simple`. |
+| Start Server says **port in use / not listening** | Change **Bridge port** (default 6020) or **HTTP port** (default 8799) to a free port, then Start. Server URL follows the Bridge port automatically. |
+| Confused by the two ports | **Bridge port** is the internal WebSocket channel (extension ↔ Python server); **HTTP port** is what the MCP client connects to (`http://127.0.0.1:8799/mcp/`). |
+| Connect won't turn green | Make sure Start Server is running, and Connect uses the same Bridge port you started with. |
+| No **Cocos MCP** menu | Ensure the plugin is under the project's `extensions/`, then reload the extension or restart the editor. |
 
 ## Directory layout
 

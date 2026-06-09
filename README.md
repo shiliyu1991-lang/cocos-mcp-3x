@@ -59,6 +59,14 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -e .
 ```
 
+> **国内网络注意**：直连 `pypi.org` 装依赖经常超时。请加国内镜像：
+>
+> ```bat
+> .venv\Scripts\python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
+> ```
+>
+> （清华源，也可换阿里 `https://mirrors.aliyun.com/pypi/simple`。）
+
 > `.venv` **不随仓库分发**（`pyvenv.cfg` 写死了本机 Python 路径，且体积大）。
 > 拿到插件后各自按此步骤创建即可。面板在检测不到 `python.exe` 时也会直接给出这条命令。
 
@@ -90,6 +98,17 @@ python -m main --transport http --http-port 8765    # 手动测试
 | `COCOS_MCP_BRIDGE_PATH` | `/cocosmcp` |
 | `COCOS_MCP_REQUEST_TIMEOUT` | `30`（秒） |
 | `COCOS_MCP_CONNECT_TIMEOUT` | `5`（秒） |
+
+## 常见问题
+
+| 现象 | 原因 / 解决 |
+| --- | --- |
+| 面板里 **python: NOT FOUND** | `server\.venv` 还没建。按上面「首次使用」创建虚拟环境即可；面板每 1.5 秒自动重新检测。 |
+| `pip install` 一直 **超时 / Read timed out** | 直连 pypi.org 不通。加国内镜像 `-i https://pypi.tuna.tsinghua.edu.cn/simple`（见上）。 |
+| 点 Start Server 后报 **端口被占用 / 没监听** | 改 **Bridge port**（默认 6020）或 **HTTP port**（默认 8799）换一个空闲端口，再 Start。Server URL 会自动跟随 Bridge port。 |
+| 分不清两个端口 | **Bridge port** 是扩展↔Python 服务器的内部 WebSocket 通道；**HTTP port** 才是 MCP 客户端要连的地址（`http://127.0.0.1:8799/mcp/`）。 |
+| Connect 点了不亮绿点 | 先确认 Start Server 已 running；再确认 Connect 用的 Bridge port 和 Start 时一致。 |
+| 菜单里找不到 **Cocos MCP** | 确认插件放在项目的 `extensions/` 下，并重新加载扩展或重启编辑器。 |
 
 ## 目录结构
 
