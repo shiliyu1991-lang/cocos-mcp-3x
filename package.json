@@ -1,0 +1,63 @@
+{
+  "package_version": 2,
+  "name": "cocos-mcp-3x",
+  "version": "0.3.0",
+  "description": "MCP bridge for Cocos Creator 3.8.x — connects (as a client) to a Python MCP server over WebSocket. Self-contained, no npm dependencies.",
+  "author": "cocosMcp",
+  "editor": ">=3.8.0",
+  "main": "./main.js",
+  "panels": {
+    "default": {
+      "title": "Cocos MCP",
+      "type": "dockable",
+      "main": "./panel/index.js",
+      "size": {
+        "min-width": 360,
+        "min-height": 300,
+        "width": 420,
+        "height": 460
+      }
+    }
+  },
+  "contributions": {
+    "scene": {
+      "script": "./scene.js"
+    },
+    "menu": [
+      {
+        "path": "i18n:menu.panel/Cocos MCP",
+        "label": "Open Panel",
+        "message": "open-panel"
+      }
+    ],
+    "messages": {
+      "open-panel": {
+        "methods": ["openPanel"]
+      },
+      "panel-connect": {
+        "methods": ["panelConnect"]
+      },
+      "panel-disconnect": {
+        "methods": ["panelDisconnect"]
+      },
+      "panel-status": {
+        "methods": ["panelStatus"]
+      },
+      "panel-start-server": {
+        "methods": ["panelStartServer"]
+      },
+      "panel-stop-server": {
+        "methods": ["panelStopServer"]
+      },
+      "panel-server-status": {
+        "methods": ["panelServerStatus"]
+      },
+      "panel-set-server-dir": {
+        "methods": ["panelSetServerDir"]
+      },
+      "panel-set-http-port": {
+        "methods": ["panelSetHttpPort"]
+      }
+    }
+  }
+}
