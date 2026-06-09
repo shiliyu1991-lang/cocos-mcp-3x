@@ -501,8 +501,12 @@ const handlers = {
 
         if (action === 'refresh') {
             const url = _normUrl(params.url) || 'db://assets';
-            await req('asset-db', 'refresh-asset', url);
-            return { refreshed: true, url: url };
+            // Fire-and-forget: refreshing a compiled script/scene can trigger a
+            // slow reimport whose promise may exceed the bridge request timeout
+            // (default 30s). Kick it off and return immediately; completion is
+            // async (watch read_console).
+            Promise.resolve(req('asset-db', 'refresh-asset', url)).catch(() => {});
+            return { refreshing: true, url: url };
         }
 
         throw new Error('manage_asset: unknown action "' + action +
