@@ -1,5 +1,7 @@
 # cocos-mcp-3x
 
+**中文** · [English](./README.en.md)
+
 把 LLM（Claude Desktop / Cursor 等 MCP 客户端）接入 **Cocos Creator 3.8.x** 编辑器的插件，
 让大模型能够检视并驱动你的游戏工程：读写节点、操作资源与场景、查看控制台、执行脚本。
 
