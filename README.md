@@ -1,57 +1,63 @@
 # cocos-mcp-3x
 
-**中文** · [English](./README.en.md)
+**English** · [中文](./README.zh-CN.md)
 
-把 LLM（Claude Desktop / Cursor 等 MCP 客户端）接入 **Cocos Creator 3.8.x** 编辑器的插件，
-让大模型能够检视并驱动你的游戏工程：读写节点、操作资源与场景、查看控制台、执行脚本。
+An editor extension that connects an LLM (Claude Desktop / Cursor or any MCP client) to the
+**Cocos Creator 3.8.x** editor, letting the model inspect and drive your game project: read/write
+nodes, operate on assets and scenes, read the console, and execute scripts.
 
-插件**自包含**：Python MCP 服务器就打包在插件目录内的 `./server`，扩展本身**无任何 npm 依赖、无构建步骤**。
+The plugin is **self-contained**: the Python MCP server is bundled inside the plugin at `./server`,
+and the extension itself has **no npm dependencies and no build step**.
 
-## 工作原理
+## How it works
 
 ```
-MCP 客户端 (Claude / Cursor)
+MCP client (Claude / Cursor)
         │  stdio / http
         ▼
-Python FastMCP 服务器  ── server/src/main.py
-        │  WebSocket 桥  127.0.0.1:6020/cocosmcp
+Python FastMCP server  ── server/src/main.py
+        │  WebSocket bridge  127.0.0.1:6020/cocosmcp
         ▼
-Cocos Creator 扩展     ── main.js（作为 WS 客户端连入）
+Cocos Creator extension ── main.js (connects in as the WS client)
         │  Editor.Message.request(...)
         ▼
-   Cocos 编辑器（asset-db / scene API）
+   Cocos editor (asset-db / scene API)
 ```
 
-- Python 端是 WebSocket **服务端**，Cocos 扩展是**客户端**，由面板上的 *Connect* 按钮主动连入。
-- 每个工具调用都通过桥发一个 JSON 信封到扩展，扩展按命令名分发给对应处理器，执行编辑器操作后回传 `{id, success, data|error}`。
+- The Python side is the WebSocket **server**; the Cocos extension is the **client** and dials in
+  via the *Connect* button on the panel.
+- Each tool call sends a JSON envelope over the bridge to the extension, which dispatches by command
+  name to the matching handler, runs the editor operation, and replies `{id, success, data|error}`.
 
-## 提供的工具
+## Tools provided
 
-| 工具 | 作用 |
+| Tool | Purpose |
 | --- | --- |
-| `get_project_info` | 工程路径、assets 根、编辑器版本、场景列表、可用桥命令 |
-| `manage_scene` | 列出 / 打开 / 保存场景（Cocos 3.x `.scene`） |
-| `manage_node` | 检视或修改当前场景中的节点（多数操作按 `uuid`） |
-| `manage_asset` | 通过 asset-db 检视和操作 `assets/` 下的资源 |
-| `read_console` | 读取 / 清空编辑器控制台（500 条环形缓冲） |
-| `execute_script` | 在编辑器主上下文或场景上下文执行任意 JS（强力逃生舱） |
+| `get_project_info` | Project path, assets root, editor version, scene list, available bridge commands |
+| `manage_scene` | List / open / save scenes (Cocos 3.x `.scene`) |
+| `manage_node` | Inspect or modify nodes in the current scene (mostly addressed by `uuid`) |
+| `manage_asset` | Inspect and manipulate assets under `assets/` via the asset-db |
+| `read_console` | Read / clear the editor console (500-entry ring buffer) |
+| `execute_script` | Execute arbitrary JS in the editor main or scene context (powerful escape hatch) |
 
-## 安装到项目
+## Install into a project
 
-把整个 `cocos-mcp-3x` 文件夹放到 Cocos 项目的 `extensions/` 目录下：
+Drop the whole `cocos-mcp-3x` folder into your Cocos project's `extensions/` directory:
 
 ```
-<你的项目>/extensions/cocos-mcp-3x/
+<your-project>/extensions/cocos-mcp-3x/
 ```
 
-> 开发时也可以用目录链接（junction）指向插件源码，改动即时生效：
-> `mklink /J "<项目>\extensions\cocos-mcp-3x" "<插件源码路径>"`
+> During development you can use a directory junction pointing at the plugin source so edits take
+> effect immediately:
+> `mklink /J "<project>\extensions\cocos-mcp-3x" "<plugin-source-path>"`
 
-重启编辑器（或重新加载扩展）后，菜单里会出现 **Cocos MCP → Open Panel**。
+After restarting the editor (or reloading the extension), **Cocos MCP → Open Panel** appears in the menu.
 
-## 首次使用：创建 Python 环境
+## First run: create the Python environment
 
-需要本机安装 **Python 3.10+**。在插件的 `server` 目录里创建虚拟环境并安装依赖：
+Requires **Python 3.10+** on your machine. Create a virtual environment inside the plugin's `server`
+directory and install the dependencies:
 
 ```bat
 cd cocos-mcp-3x\server
@@ -59,80 +65,82 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -e .
 ```
 
-> **国内网络注意**：直连 `pypi.org` 装依赖经常超时。请加国内镜像：
+> **Behind a slow/blocked PyPI** (e.g. in mainland China), the install often times out. Add a mirror:
 >
 > ```bat
 > .venv\Scripts\python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
 > ```
->
-> （清华源，也可换阿里 `https://mirrors.aliyun.com/pypi/simple`。）
 
-> `.venv` **不随仓库分发**（`pyvenv.cfg` 写死了本机 Python 路径，且体积大）。
-> 拿到插件后各自按此步骤创建即可。面板在检测不到 `python.exe` 时也会直接给出这条命令。
+> `.venv` is **not distributed with the repo** (its `pyvenv.cfg` hardcodes the local Python path and
+> it is large). Recreate it locally with the step above — the panel also surfaces this exact command
+> when it can't find `python.exe`.
 
-依赖：`fastmcp>=2.0.0`、`websockets>=12.0`（装 `.[dev]` 额外带 `pytest`、`pytest-asyncio`）。
+Dependencies: `fastmcp>=2.0.0`, `websockets>=12.0` (install `.[dev]` to also get `pytest`,
+`pytest-asyncio`).
 
-## 在面板里使用
+## Using the panel
 
-1. 打开面板：菜单 **Cocos MCP → Open Panel**。
-2. **Server dir** 留空 = 使用插件自带的 `./server`（推荐）。只有服务器在别处时才填绝对路径覆盖。
-3. 点 **Start Server**，提示行显示 `python: found` 即就绪。
-4. 点 **Connect**，绿点亮起表示 WebSocket 桥已连通。
+1. Open the panel: menu **Cocos MCP → Open Panel**.
+2. **Server dir** empty = use the plugin's bundled `./server` (recommended). Only fill in an absolute
+   path to override when the server lives elsewhere.
+3. Click **Start Server**; the hint line showing `python: found` means it's ready.
+4. Click **Connect**; a green dot means the WebSocket bridge is connected.
 
-## 配置 MCP 客户端
+## Configure the MCP client
 
-服务器入口为 `server/src/main.py`，支持 `stdio`（客户端默认）与 `http`（手动测试）两种传输：
+The server entry point is `server/src/main.py` and supports two transports — `stdio` (client default)
+and `http` (manual testing):
 
 ```bash
 cd cocos-mcp-3x/server/src
 python -m main --transport stdio                    # Claude Desktop / Cursor
-python -m main --transport http --http-port 8765    # 手动测试
+python -m main --transport http --http-port 8765    # manual testing
 ```
 
-环境变量（优先级 CLI 参数 > 环境变量 > 默认值）：
+Environment variables (precedence: CLI args > env vars > defaults):
 
-| 变量 | 默认值 |
+| Variable | Default |
 | --- | --- |
 | `COCOS_MCP_BRIDGE_HOST` | `127.0.0.1` |
 | `COCOS_MCP_BRIDGE_PORT` | `6020` |
 | `COCOS_MCP_BRIDGE_PATH` | `/cocosmcp` |
-| `COCOS_MCP_REQUEST_TIMEOUT` | `30`（秒） |
-| `COCOS_MCP_CONNECT_TIMEOUT` | `5`（秒） |
+| `COCOS_MCP_REQUEST_TIMEOUT` | `30` (seconds) |
+| `COCOS_MCP_CONNECT_TIMEOUT` | `5` (seconds) |
 
-## 常见问题
+## Troubleshooting
 
-| 现象 | 原因 / 解决 |
+| Symptom | Cause / fix |
 | --- | --- |
-| 面板里 **python: NOT FOUND** | `server\.venv` 还没建。按上面「首次使用」创建虚拟环境即可；面板每 1.5 秒自动重新检测。 |
-| `pip install` 一直 **超时 / Read timed out** | 直连 pypi.org 不通。加国内镜像 `-i https://pypi.tuna.tsinghua.edu.cn/simple`（见上）。 |
-| 点 Start Server 后报 **端口被占用 / 没监听** | 改 **Bridge port**（默认 6020）或 **HTTP port**（默认 8799）换一个空闲端口，再 Start。Server URL 会自动跟随 Bridge port。 |
-| 分不清两个端口 | **Bridge port** 是扩展↔Python 服务器的内部 WebSocket 通道；**HTTP port** 才是 MCP 客户端要连的地址（`http://127.0.0.1:8799/mcp/`）。 |
-| Connect 点了不亮绿点 | 先确认 Start Server 已 running；再确认 Connect 用的 Bridge port 和 Start 时一致。 |
-| 菜单里找不到 **Cocos MCP** | 确认插件放在项目的 `extensions/` 下，并重新加载扩展或重启编辑器。 |
+| Panel shows **python: NOT FOUND** | `server\.venv` isn't created yet. Run the "first run" venv steps above; the panel re-checks every 1.5s. |
+| `pip install` keeps **timing out** | PyPI unreachable. Add a mirror, e.g. `-i https://pypi.tuna.tsinghua.edu.cn/simple`. |
+| Start Server says **port in use / not listening** | Change **Bridge port** (default 6020) or **HTTP port** (default 8799) to a free port, then Start. Server URL follows the Bridge port automatically. |
+| Confused by the two ports | **Bridge port** is the internal WebSocket channel (extension ↔ Python server); **HTTP port** is what the MCP client connects to (`http://127.0.0.1:8799/mcp/`). |
+| Connect won't turn green | Make sure Start Server is running, and Connect uses the same Bridge port you started with. |
+| No **Cocos MCP** menu | Ensure the plugin is under the project's `extensions/`, then reload the extension or restart the editor. |
 
-## 目录结构
+## Directory layout
 
 ```
 cocos-mcp-3x/
-├── main.js            扩展主进程（WebSocket 客户端 + 命令处理）
-├── panel/index.js     面板 UI（启动服务器 / 连接）
-├── scene.js           场景上下文脚本（evalInScene）
+├── main.js            Extension main process (WebSocket client + command handlers)
+├── panel/index.js     Panel UI (start server / connect)
+├── scene.js           Scene-context script (evalInScene)
 ├── package.json
-├── SETUP.md           安装与分发详细说明
-└── server/            内置的 Python MCP 服务器
-    ├── src/           入口 main.py、core/transport/services/utils
+├── SETUP.md           Detailed install & distribution notes
+└── server/            Bundled Python MCP server
+    ├── src/           Entry main.py; core/transport/services/utils
     ├── pyproject.toml
-    └── .venv/         Python 虚拟环境（本机生成，不入库）
+    └── .venv/         Python virtual environment (generated locally, not committed)
 ```
 
-## 扩展：新增一个工具
+## Extending: add a tool
 
-1. 在 `server/src/services/tools/` 新建 `<name>.py`，用 `@cocos_mcp_tool(description=...)` 装饰一个
-   async 函数，`return await call_bridge("<name>", params)`（参考 `get_project_info.py`）。无需手动注册，
-   启动时自动发现。
-2. 在 `main.js` 加一个同名命令处理器。两端的命令名与参数结构需一致。
+1. Create `server/src/services/tools/<name>.py`, decorate an async function with
+   `@cocos_mcp_tool(description=...)`, and `return await call_bridge("<name>", params)`
+   (see `get_project_info.py`). No manual registration — tools are auto-discovered on startup.
+2. Add a matching command handler in `main.js`. Both ends must agree on the command name and param shape.
 
-## 环境要求
+## Requirements
 
 - Cocos Creator 3.8.0+
 - Python 3.10+
