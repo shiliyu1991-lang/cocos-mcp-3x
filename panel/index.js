@@ -18,8 +18,8 @@
 
 const PKG = 'cocos-mcp-3x';
 const DEFAULT_URL = 'ws://127.0.0.1:6020/cocosmcp';
-const DEFAULT_BRIDGE_PORT = 6020;   // WebSocket bridge (extension <-> server)
-const DEFAULT_HTTP_PORT = 8799;     // MCP HTTP endpoint (client <-> server)
+const DEFAULT_BRIDGE_PORT = 6020;   // WebSocket bridge (extension <-> server) — must match server core/config.py
+const DEFAULT_HTTP_PORT = 8765;     // MCP HTTP endpoint (client <-> server)
 
 module.exports = Editor.Panel.define({
     template: `
@@ -36,9 +36,9 @@ module.exports = Editor.Panel.define({
     </ui-prop>
     <ui-prop>
         <ui-label slot="label" value="HTTP port"></ui-label>
-        <ui-input id="httpport" slot="content" placeholder="8799"></ui-input>
+        <ui-input id="httpport" slot="content" placeholder="8765"></ui-input>
     </ui-prop>
-    <div class="hint">Default ports — bridge 6020, http 8799. If one is in use, change it here, then Start. The Server URL syncs to the bridge port automatically.</div>
+    <div class="hint">Default ports — bridge 6020, http 8765. If one is in use, change it here, then Start. The Server URL syncs to the bridge port automatically.</div>
     <ui-prop>
         <ui-label slot="label" value="Server dir"></ui-label>
         <ui-input id="serverdir" slot="content" placeholder="auto — bundled ./server (leave blank)"></ui-input>

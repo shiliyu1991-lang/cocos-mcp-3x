@@ -1,6 +1,6 @@
-# Cocos MCP (3.8.x) — 安装与分发说明
+# Cocos MCP (3.7–3.8.x) — 安装与分发说明
 
-把 LLM（Claude Desktop / Cursor 等 MCP 客户端）接入 Cocos Creator 3.8.x 编辑器的插件。
+把 LLM（Claude Desktop / Cursor 等 MCP 客户端）接入 Cocos Creator 3.7–3.8.x 编辑器的插件。
 插件**自包含**：Python MCP 服务器就在插件目录内的 `./server`。
 
 ## 目录结构

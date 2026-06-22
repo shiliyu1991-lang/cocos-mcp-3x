@@ -3,7 +3,7 @@ cocos-mcp server entrypoint.
 
 Boots a FastMCP server that exposes a small set of tools backed by a
 WebSocket bridge. The Python side hosts the WS server; the Cocos Creator
-3.8.x editor extension (`cocos-mcp-3x/` in this repo) dials in as a client.
+3.7–3.8.x editor extension (`cocos-mcp-3x/` in this repo) dials in as a client.
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ logger = logging.getLogger("cocos-mcp")
 
 
 INSTRUCTIONS = """
-This server controls a Cocos Creator 3.8.x editor through a small WebSocket
+This server controls a Cocos Creator 3.7–3.8.x editor through a small WebSocket
 bridge that runs as an editor extension. The Python side hosts a WS server;
 the Cocos extension connects to it from its panel.
 
@@ -85,7 +85,7 @@ def build_server() -> FastMCP:
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         prog="cocos-mcp-3x",
-        description="MCP server for Cocos Creator 3.8.x",
+        description="MCP server for Cocos Creator 3.7–3.8.x",
     )
     p.add_argument("--bridge-host", default=None,
                    help="Host the Python WS bridge listens on for the Cocos "

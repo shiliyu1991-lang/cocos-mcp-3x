@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Cocos MCP (3.8.x) — single-file extension main process, no npm dependencies.
+ * Cocos MCP (3.7–3.8.x) — single-file extension main process, no npm dependencies.
  *
  * Mirror image of cocos-mcp-2x/main.js. Same JSON envelope and same WebSocket
  * client; the differences from 2.4 are all in the editor APIs the handlers call:
@@ -34,6 +34,10 @@ const ChildProcess = require('child_process');
 const { EventEmitter } = require('events');
 
 const PACKAGE_NAME = 'cocos-mcp-3x';
+// Bridge (WebSocket) port must match the Python server default (core/config.py
+// COCOS_MCP_BRIDGE_PORT = 6020). When an MCP client launches the server over
+// stdio it passes no --bridge-port, so the server listens on 6020; the panel's
+// Connect must dial the same port or the green dot never lights.
 const DEFAULT_URL = 'ws://127.0.0.1:6020/cocosmcp';
 const MAX_FRAME = 16 * 1024 * 1024;
 const WS_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
@@ -47,7 +51,7 @@ const WS_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 // and the HTTP port are overridable from the panel and persisted via
 // Editor.Profile, for the rare case where the server lives elsewhere.
 const DEFAULT_SERVER_DIR = Path.join(__dirname, 'server');
-const DEFAULT_HTTP_PORT = 8799;
+const DEFAULT_HTTP_PORT = 8765;
 
 // ----------------------------------------------------------------------- //
 // 1. Minimal WebSocket client (text frames only) — identical to 2.4.
@@ -404,7 +408,7 @@ const handlers = {
         } catch (e) { /* ignore — still report the rest */ }
         const projectPath = _safe(() => Editor.Project.path, null);
         return {
-            engine: '3.8',
+            engine: _safe(() => String(Editor.App.version || '').split('.').slice(0, 2).join('.'), '3.x') || '3.x',
             projectPath: projectPath,
             projectName: _safe(() => Editor.Project.name, null),
             assetsRoot: projectPath ? Path.join(projectPath, 'assets') : null,
@@ -711,7 +715,7 @@ function _connect(url) {
             _connected = true;
             _lastError = null;
             try {
-                ws.send(JSON.stringify({ type: 'hello', client: PACKAGE_NAME, engine: '3.8' }));
+                ws.send(JSON.stringify({ type: 'hello', client: PACKAGE_NAME, engine: '3.x' }));
             } catch (e) { /* ignore */ }
             resolve(_connectionState());
         };
