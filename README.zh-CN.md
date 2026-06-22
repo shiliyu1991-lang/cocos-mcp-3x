@@ -2,7 +2,7 @@
 
 [English](./README.md) · **中文**
 
-把 LLM（Claude Desktop / Cursor 等 MCP 客户端）接入 **Cocos Creator 3.8.x** 编辑器的插件，
+把 LLM（Claude Desktop / Cursor 等 MCP 客户端）接入 **Cocos Creator 3.7–3.8.x** 编辑器的插件，
 让大模型能够检视并驱动你的游戏工程：读写节点、操作资源与场景、查看控制台、执行脚本。
 
 插件**自包含**：Python MCP 服务器就打包在插件目录内的 `./server`，扩展本身**无任何 npm 依赖、无构建步骤**。
@@ -105,8 +105,8 @@ python -m main --transport http --http-port 8765    # 手动测试
 | --- | --- |
 | 面板里 **python: NOT FOUND** | `server\.venv` 还没建。按上面「首次使用」创建虚拟环境即可；面板每 1.5 秒自动重新检测。 |
 | `pip install` 一直 **超时 / Read timed out** | 直连 pypi.org 不通。加国内镜像 `-i https://pypi.tuna.tsinghua.edu.cn/simple`（见上）。 |
-| 点 Start Server 后报 **端口被占用 / 没监听** | 改 **Bridge port**（默认 6020）或 **HTTP port**（默认 8799）换一个空闲端口，再 Start。Server URL 会自动跟随 Bridge port。 |
-| 分不清两个端口 | **Bridge port** 是扩展↔Python 服务器的内部 WebSocket 通道；**HTTP port** 才是 MCP 客户端要连的地址（`http://127.0.0.1:8799/mcp/`）。 |
+| 点 Start Server 后报 **端口被占用 / 没监听** | 改 **Bridge port**（默认 6020）或 **HTTP port**（默认 8765）换一个空闲端口，再 Start。Server URL 会自动跟随 Bridge port。 |
+| 分不清两个端口 | **Bridge port** 是扩展↔Python 服务器的内部 WebSocket 通道；**HTTP port** 才是 MCP 客户端要连的地址（`http://127.0.0.1:8765/mcp/`）。 |
 | Connect 点了不亮绿点 | 先确认 Start Server 已 running；再确认 Connect 用的 Bridge port 和 Start 时一致。 |
 | 菜单里找不到 **Cocos MCP** | 确认插件放在项目的 `extensions/` 下，并重新加载扩展或重启编辑器。 |
 
@@ -134,7 +134,7 @@ cocos-mcp-3x/
 
 ## 环境要求
 
-- Cocos Creator 3.8.0+
+- Cocos Creator 3.7.0 ~ 3.8.x
 - Python 3.10+
 
 ## License

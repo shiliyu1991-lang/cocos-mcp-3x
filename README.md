@@ -3,7 +3,7 @@
 **English** · [中文](./README.zh-CN.md)
 
 An editor extension that connects an LLM (Claude Desktop / Cursor or any MCP client) to the
-**Cocos Creator 3.8.x** editor, letting the model inspect and drive your game project: read/write
+**Cocos Creator 3.7–3.8.x** editor, letting the model inspect and drive your game project: read/write
 nodes, operate on assets and scenes, read the console, and execute scripts.
 
 The plugin is **self-contained**: the Python MCP server is bundled inside the plugin at `./server`,
@@ -113,8 +113,8 @@ Environment variables (precedence: CLI args > env vars > defaults):
 | --- | --- |
 | Panel shows **python: NOT FOUND** | `server\.venv` isn't created yet. Run the "first run" venv steps above; the panel re-checks every 1.5s. |
 | `pip install` keeps **timing out** | PyPI unreachable. Add a mirror, e.g. `-i https://pypi.tuna.tsinghua.edu.cn/simple`. |
-| Start Server says **port in use / not listening** | Change **Bridge port** (default 6020) or **HTTP port** (default 8799) to a free port, then Start. Server URL follows the Bridge port automatically. |
-| Confused by the two ports | **Bridge port** is the internal WebSocket channel (extension ↔ Python server); **HTTP port** is what the MCP client connects to (`http://127.0.0.1:8799/mcp/`). |
+| Start Server says **port in use / not listening** | Change **Bridge port** (default 6020) or **HTTP port** (default 8765) to a free port, then Start. Server URL follows the Bridge port automatically. |
+| Confused by the two ports | **Bridge port** is the internal WebSocket channel (extension ↔ Python server); **HTTP port** is what the MCP client connects to (`http://127.0.0.1:8765/mcp/`). |
 | Connect won't turn green | Make sure Start Server is running, and Connect uses the same Bridge port you started with. |
 | No **Cocos MCP** menu | Ensure the plugin is under the project's `extensions/`, then reload the extension or restart the editor. |
 
@@ -142,7 +142,7 @@ cocos-mcp-3x/
 
 ## Requirements
 
-- Cocos Creator 3.8.0+
+- Cocos Creator 3.7.0 – 3.8.x
 - Python 3.10+
 
 ## License
