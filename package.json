@@ -1,7 +1,7 @@
 {
   "package_version": 2,
   "name": "cocos-mcp-3x",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "MCP bridge for Cocos Creator 3.7–3.8.x — connects (as a client) to a Python MCP server over WebSocket. Self-contained, no npm dependencies.",
   "author": "cocosMcp",
   "editor": ">=3.7.0",
@@ -57,6 +57,15 @@
       },
       "panel-set-http-port": {
         "methods": ["panelSetHttpPort"]
+      },
+      "panel-runtime-logs-status": {
+        "methods": ["panelRuntimeLogsStatus"]
+      },
+      "panel-enable-runtime-logs": {
+        "methods": ["panelEnableRuntimeLogs"]
+      },
+      "panel-disable-runtime-logs": {
+        "methods": ["panelDisableRuntimeLogs"]
       }
     }
   }

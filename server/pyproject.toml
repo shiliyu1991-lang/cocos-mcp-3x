@@ -1,6 +1,6 @@
 [project]
 name = "cocos-mcp-3x-server"
-version = "0.3.0"
+version = "0.4.0"
 description = "MCP server that drives Cocos Creator 3.7–3.8.x via a WebSocket bridge installed as an editor extension."
 readme = "README.md"
 license = "MIT"

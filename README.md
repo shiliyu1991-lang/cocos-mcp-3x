@@ -37,8 +37,13 @@ Cocos Creator extension ── main.js (connects in as the WS client)
 | `manage_scene` | List / open / save scenes (Cocos 3.x `.scene`) |
 | `manage_node` | Inspect or modify nodes in the current scene (mostly addressed by `uuid`) |
 | `manage_asset` | Inspect and manipulate assets under `assets/` via the asset-db |
-| `read_console` | Read / clear the editor console (500-entry ring buffer) |
+| `read_console` | Read / clear the log buffer (500-entry ring) — **includes both editor logs and the running game's own logs from the browser preview** |
 | `execute_script` | Execute arbitrary JS in the editor main or scene context (powerful escape hatch) |
+
+> **Reading logs? Always use `read_console`.** It returns both editor logs and the running game's
+> browser-preview console (`cc.log` / `console.*`); pass `sources=["runtime"]` for game-only,
+> `levels=["error"]` for errors. Do **not** use a generic browser-automation tool (e.g.
+> claude-in-chrome) to read a Cocos game's console — it can't reach the editor's preview tab.
 
 ## Install into a project
 
@@ -139,6 +144,52 @@ cocos-mcp-3x/
    `@cocos_mcp_tool(description=...)`, and `return await call_bridge("<name>", params)`
    (see `get_project_info.py`). No manual registration — tools are auto-discovered on startup.
 2. Add a matching command handler in `main.js`. Both ends must agree on the command name and param shape.
+
+## Browser-preview runtime logs (`source: "runtime"`)
+
+The editor process can't see the `cc.log` / `console.*` a game emits in the **browser preview**.
+After you enable "浏览器预览日志捕获 / runtime log capture" in the panel, the extension:
+
+1. Starts a lightweight HTTP receiver in the extension process (port = bridge port + 1, default `6021`);
+2. Writes a project preview template that reproduces the editor's default 3.x preview page (keeping
+   the `cocosToolBar` / `cocosTemplate` EJS includes so the engine still boots) plus a reporter
+   script. The reporter hooks `console.*` (web-side `cc.log` routes through `console`) and forwards
+   each entry via `navigator.sendBeacon` into the same ring buffer, tagged `source: "runtime"`.
+
+Template location follows the Creator version: **3.8.3+** uses `<project>/templates/preview-template/`,
+older 3.x uses `<project>/preview-template/`. Handling is in-place and non-destructive:
+
+- If a preview template (`index.ejs` / `index.html`) already exists, the reporter block is injected
+  before `</body>`, fenced with `COCOS-MCP-LOG-START / END` comments.
+- If none exists, a standalone `index.ejs` is generated (default preview page + reporter block).
+- On **disable**, only the fenced block is stripped (your template is preserved); a self-generated
+  template is deleted.
+
+So `read_console` returns editor + browser-runtime logs together. While play-testing use
+`read_console(sources=["runtime"])` for game-only logs, and `levels=["error"]` for errors only.
+
+Common query filters (`read_console` params):
+
+- `sources=["runtime"]` for game logs; after editing scripts/scenes use `sources=["editor"]` for compile errors.
+- `levels=["warn","error"]` for warnings/errors only.
+- `contains="S2C_"` (or your app's log prefix) for one protocol/module. Heartbeat noise dominates —
+  always filter with `contains` when diagnosing.
+- `since=<previous nextCursor>` to pull only new entries; `count` defaults to 50, capped at 500.
+- `action="clear"` empties the buffer.
+
+Notes:
+
+- **Enabling requires one editor restart** (Cocos caches the preview template); then preview as "Browser".
+- This only affects **preview**, not production builds.
+
+### Maintenance note: how an AI "knows" these logs exist
+
+**An AI does not read this README.** Everything it knows about a tool comes from that tool's
+`description` (the string in `@cocos_mcp_tool(description=...)` in
+`server/src/services/tools/<tool>.py`) — the only "manual" an AI reads automatically. So to teach an
+AI a capability, edit that tool's `description`, not the README. After editing, **Stop → Start the
+server** (descriptions register at server start) and have the MCP client **reconnect / refresh
+tools** (clients cache the tool list).
 
 ## Requirements
 

@@ -66,6 +66,19 @@ module.exports = Editor.Panel.define({
         <span id="status">unknown</span>
     </div>
 
+    <div class="sep"></div>
+    <header style="font-size:12px;">浏览器预览日志捕获</header>
+    <div class="hint">开启后向项目预览模板注入上报脚本，把浏览器里运行的游戏 cc.log/console 日志回传，read_console 用 sources=['runtime'] 可读到。<b>开启后需重启一次编辑器</b>，预览时选「Browser」。</div>
+    <div class="row">
+        <ui-button id="rlon" type="primary">开启捕获</ui-button>
+        <ui-button id="rloff">关闭捕获</ui-button>
+    </div>
+    <div class="state">
+        <span class="dot" id="rldot"></span>
+        <span id="rlstatus">runtime logs: unknown</span>
+    </div>
+    <div class="hint" id="rlinfo"></div>
+
     <div class="err" id="err"></div>
     <footer>The Python server is bundled in this plugin (./server). Start Server, then Connect.</footer>
 </div>`,
@@ -100,6 +113,11 @@ module.exports = Editor.Panel.define({
         disconnect: '#disconnect',
         status: '#status',
         dot: '#dot',
+        rlon: '#rlon',
+        rloff: '#rloff',
+        rldot: '#rldot',
+        rlstatus: '#rlstatus',
+        rlinfo: '#rlinfo',
         err: '#err',
     },
     methods: {
@@ -263,6 +281,51 @@ module.exports = Editor.Panel.define({
                 const s = await Editor.Message.request(PKG, 'panel-status');
                 this._render(s);
             } catch (e) { /* idem */ }
+            try {
+                const rl = await Editor.Message.request(PKG, 'panel-runtime-logs-status');
+                this._renderRuntimeLogs(rl);
+            } catch (e) { /* idem */ }
+        },
+        // --- browser-preview runtime log capture ---
+        _renderRuntimeLogs(s) {
+            s = s || {};
+            const on = !!s.enabled;
+            if (this.$.rlstatus) {
+                this.$.rlstatus.innerText = 'runtime logs: ' + (on ? 'on' : 'off') +
+                    (s.receiverRunning ? (' · 接收端口 ' + s.receiverPort) : '');
+            }
+            if (this.$.rldot) this.$.rldot.className = 'dot ' + (on ? 'on' : 'off');
+            this._setDisabled(this.$.rlon, on);
+            this._setDisabled(this.$.rloff, !on);
+            if (this.$.rlinfo) {
+                if (on && s.templatePath) {
+                    const mode = s.mode === 'created' ? '已生成模板' : (s.mode === 'injected' ? '已注入到现有模板' : '');
+                    this.$.rlinfo.innerText = (mode ? (mode + '：') : '') + s.templatePath +
+                        '\n开启后请重启一次编辑器，预览时选「Browser」。';
+                } else {
+                    this.$.rlinfo.innerText = '';
+                }
+            }
+        },
+        async _enableRuntimeLogs() {
+            try {
+                this._setDisabled(this.$.rlon, true);
+                const s = await Editor.Message.request(PKG, 'panel-enable-runtime-logs');
+                this._renderRuntimeLogs(s);
+            } catch (e) {
+                this.$.err.innerText = String(e && e.message ? e.message : e);
+                this._setDisabled(this.$.rlon, false);
+            }
+        },
+        async _disableRuntimeLogs() {
+            try {
+                this._setDisabled(this.$.rloff, true);
+                const s = await Editor.Message.request(PKG, 'panel-disable-runtime-logs');
+                this._renderRuntimeLogs(s);
+            } catch (e) {
+                this.$.err.innerText = String(e && e.message ? e.message : e);
+                this._setDisabled(this.$.rloff, false);
+            }
         },
     },
     ready() {
@@ -300,6 +363,8 @@ module.exports = Editor.Panel.define({
         if (this.$.stop) this.$.stop.addEventListener('confirm', () => this._stop());
         if (this.$.connect) this.$.connect.addEventListener('confirm', () => this._connect());
         if (this.$.disconnect) this.$.disconnect.addEventListener('confirm', () => this._disconnect());
+        if (this.$.rlon) this.$.rlon.addEventListener('confirm', () => this._enableRuntimeLogs());
+        if (this.$.rloff) this.$.rloff.addEventListener('confirm', () => this._disableRuntimeLogs());
         this._poll();
         this._timer = setInterval(() => this._poll(), 1500);
     },

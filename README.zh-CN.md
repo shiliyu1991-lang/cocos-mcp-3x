@@ -33,8 +33,12 @@ Cocos Creator 扩展     ── main.js（作为 WS 客户端连入）
 | `manage_scene` | 列出 / 打开 / 保存场景（Cocos 3.x `.scene`） |
 | `manage_node` | 检视或修改当前场景中的节点（多数操作按 `uuid`） |
 | `manage_asset` | 通过 asset-db 检视和操作 `assets/` 下的资源 |
-| `read_console` | 读取 / 清空编辑器控制台（500 条环形缓冲） |
+| `read_console` | 读取 / 清空日志缓冲（500 条环形）——**同时含编辑器日志和浏览器预览里游戏自己的运行时日志** |
 | `execute_script` | 在编辑器主上下文或场景上下文执行任意 JS（强力逃生舱） |
+
+> **读日志一律用 `read_console`。** 它同时返回编辑器日志和运行中游戏在浏览器预览里的控制台
+> （`cc.log` / `console.*`）；只看游戏日志传 `sources=["runtime"]`，只看报错加 `levels=["error"]`。
+> **不要**用通用浏览器自动化工具（如 claude-in-chrome）去读 Cocos 游戏的控制台——它够不到编辑器的预览标签页。
 
 ## 安装到项目
 
@@ -131,6 +135,47 @@ cocos-mcp-3x/
    async 函数，`return await call_bridge("<name>", params)`（参考 `get_project_info.py`）。无需手动注册，
    启动时自动发现。
 2. 在 `main.js` 加一个同名命令处理器。两端的命令名与参数结构需一致。
+
+## 浏览器预览运行时日志（`source: "runtime"`）
+
+编辑器进程看不到游戏在**浏览器预览**里跑出来的 `cc.log` / `console.*`。面板「浏览器预览日志捕获」
+开启后会：
+
+1. 在扩展进程内起一个轻量 HTTP 接收器（端口 = bridge 端口 + 1，默认 `6021`）；
+2. 写入一份项目预览模板：复刻 3.x 默认预览页（保留 `cocosToolBar` / `cocosTemplate` 两个 EJS
+   include，引擎照常启动），再加一段上报脚本。脚本 hook `console.*`（web 端 `cc.log` 走 `console`）
+   并通过 `navigator.sendBeacon` 把每条日志回传，落进同一个环形缓冲、标记 `source: "runtime"`。
+
+模板位置随 Creator 版本：**3.8.3+** 用 `<project>/templates/preview-template/`，更早的 3.x 用
+`<project>/preview-template/`。处理是**就地注入、不破坏你的模板**：
+
+- 若已存在预览模板（`index.ejs` / `index.html`），把上报块注入到 `</body>` 前，用
+  `COCOS-MCP-LOG-START / END` 注释围栏标记。
+- 若不存在，才生成一份独立的 `index.ejs`（默认预览页 + 上报块）。
+- **关闭**时只剥离围栏内的块（你的模板原样保留）；自己生成的那份则删除。
+
+于是 `read_console` 能同时读到编辑器与浏览器运行时日志；play-test 时用 `read_console(sources=["runtime"])`
+只看游戏日志，用 `levels=["error"]` 只看报错。
+
+常用查询过滤（`read_console` 参数）：
+
+- `sources=["runtime"]` 看游戏日志；改完脚本/场景后用 `sources=["editor"]` 查编译报错。
+- `levels=["warn","error"]` 只看告警/报错。
+- `contains="S2C_"`（或你 App 的日志前缀）只看某协议/模块。心跳噪音很多，排查时务必配合 `contains` 过滤。
+- `since=<上次返回的 nextCursor>` 只拉新增条目；`count` 默认 50、上限 500。
+- `action="clear"` 清空缓冲。
+
+注意：
+
+- **开启后需重启一次 Cocos Creator**（编辑器会缓存预览模板），之后预览时选「Browser」运行。
+- 仅作用于**预览**，不影响正式构建。
+
+### 维护备注：AI 怎么「知道」有这些日志
+
+**AI 不读本 README**——它对每个工具的全部认知，来自该工具的 `description`（即
+`server/src/services/tools/<工具>.py` 里 `@cocos_mcp_tool(description=...)` 那段文本），这是 AI 唯一会
+自动读到的「说明书」。所以要让 AI 学会某能力，改的是工具 `description`，不是 README。改完后需
+**Stop → Start 服务**（描述在 server 启动时注册）并让 MCP 客户端**重连 / 刷新工具**（客户端会缓存工具列表）。
 
 ## 环境要求
 
